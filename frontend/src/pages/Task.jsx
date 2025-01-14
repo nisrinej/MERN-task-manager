@@ -17,7 +17,8 @@ const Task = () => {
   const mode = taskId === undefined ? "add" : "update";
   const [task, setTask] = useState(null);
   const [formData, setFormData] = useState({
-    description: ""
+    description: "",
+    completed: false
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -32,7 +33,7 @@ const Task = () => {
       const config = { url: `/tasks/${taskId}`, method: "get", headers: { Authorization: authState.token } };
       fetchData(config, { showSuccessToast: false }).then((data) => {
         setTask(data.task);
-        setFormData({ description: data.task.description });
+        setFormData({ description: data.task.description, completed: data.task.completed });
       });
     }
   }, [mode, authState, taskId, fetchData]);
@@ -45,10 +46,17 @@ const Task = () => {
     });
   }
 
-  const handleReset = e => {
+  const handleDone = e => {
     e.preventDefault();
-    setFormData({
-      description: task.description
+    const config = {
+      url: `/tasks/${taskId}`,
+      method: "put",
+      data: { completed: true },
+      headers: { Authorization: authState.token }
+    };
+  
+    fetchData(config).then(() => {
+      navigate("/"); 
     });
   }
 
@@ -101,8 +109,9 @@ const Task = () => {
 
               <button className='bg-primary text-white px-4 py-2 font-medium hover:bg-primary-dark' onClick={handleSubmit}>{mode === "add" ? "Add task" : "Update Task"}</button>
               <button className='ml-4 bg-red-500 text-white px-4 py-2 font-medium' onClick={() => navigate("/")}>Cancel</button>
-              {mode === "update" && <button className='ml-4 bg-blue-500 text-white px-4 py-2 font-medium hover:bg-blue-600' onClick={handleReset}>Reset</button>}
+              {mode === "update" && <button className='ml-4 bg-blue-500 text-white px-4 py-2 font-medium hover:bg-blue-600' onClick={handleDone} disabled = {formData.completed? true: false}>{formData.completed? 'Completed': 'Done'}</button>}
             </>
+
           )}
         </form>
       </MainLayout>
